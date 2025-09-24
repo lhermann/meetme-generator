@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test LinkedIn Image Display</title>
+</head>
+<body>
+    <h1>Testing LinkedIn Profile Image Proxy</h1>
+
+    <h2>Direct LinkedIn URL (should fail):</h2>
+    <img src="https://media.licdn.com/dms/image/v2/C5103AQHuKVGHtQFtgQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1586202988977?e=2147483647&v=beta&t=ns_YFRVa5L2Nq3wbPjnv8WjkxVLW8ZBN5okiC_6uJKs"
+         alt="Direct LinkedIn Image" width="200" height="200"
+         style="border: 2px solid red;">
+
+    <h2>Proxied URL (should work):</h2>
+    <img src="http://localhost:8787/proxy-image?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FC5103AQHuKVGHtQFtgQ%2Fprofile-displayphoto-shrink_200_200%2Fprofile-displayphoto-shrink_200_200%2F0%2F1586202988977%3Fe%3D2147483647%26v%3Dbeta%26t%3Dns_YFRVa5L2Nq3wbPjnv8WjkxVLW8ZBN5okiC_6uJKs"
+         alt="Proxied LinkedIn Image" width="200" height="200"
+         style="border: 2px solid green;">
+
+    <h2>Test Form:</h2>
+    <form action="http://localhost:8787/generate" method="POST">
+        <input type="url" name="linkedinUrl" value="https://www.linkedin.com/in/lukas-hermann/" style="width: 400px;">
+        <button type="submit">Test Extraction</button>
+    </form>
+</body>
+</html>

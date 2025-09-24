@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Image Extracted - MeetMe Generator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #0077b5;
+            margin-bottom: 30px;
+        }
+        .profile-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .profile-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 50%;
+            border: 4px solid #0077b5;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            margin: 20px 0;
+        }
+        .generated-section {
+            background: #e8f5e8;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .generated-image {
+            max-width: 400px;
+            border-radius: 10px;
+            border: 2px solid #28a745;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            margin: 20px 0;
+        }
+        .buttons {
+            margin: 30px 0;
+        }
+        button {
+            background-color: #0077b5;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #005885;
+        }
+        .download-btn {
+            background-color: #28a745;
+        }
+        .download-btn:hover {
+            background-color: #218838;
+        }
+        .linkedin-url {
+            color: #666;
+            font-size: 14px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        .status {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Profile Image Extracted!</h1>
+
+        <div class="linkedin-url">From: https://www.linkedin.com/in/lukas-hermann/</div>
+
+        <div class="profile-section">
+            <h3>📸 Extracted Profile Image</h3>
+            <div>
+                <img src="/proxy-image?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FC5103AQHuKVGHtQFtgQ%2Fprofile-displayphoto-shrink_200_200%2Fprofile-displayphoto-shrink_200_200%2F0%2F1586202988977%3Fe%3D2147483647%26v%3Dbeta%26t%3Dns_YFRVa5L2Nq3wbPjnv8WjkxVLW8ZBN5okiC_6uJKs" alt="LinkedIn Profile Image" class="profile-image"
+                     onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;200&quot; height=&quot;200&quot; viewBox=&quot;0 0 200 200&quot;><rect width=&quot;200&quot; height=&quot;200&quot; fill=&quot;%23f0f0f0&quot;/><text x=&quot;100&quot; y=&quot;100&quot; text-anchor=&quot;middle&quot; dy=&quot;0.3em&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;%23666&quot;>Image not accessible</text></svg>'">
+            </div>
+            <p>Original LinkedIn profile image</p>
+        </div>
+
+        <div class="generated-section">
+            <h3>🎨 Generated MeetMe Image</h3>
+            <div>
+                <img src="/proxy-image?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FC5103AQHuKVGHtQFtgQ%2Fprofile-displayphoto-shrink_200_200%2Fprofile-displayphoto-shrink_200_200%2F0%2F1586202988977%3Fe%3D2147483647%26v%3Dbeta%26t%3Dns_YFRVa5L2Nq3wbPjnv8WjkxVLW8ZBN5okiC_6uJKs" alt="Generated MeetMe Image" class="generated-image"
+                     onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;400&quot; height=&quot;400&quot; viewBox=&quot;0 0 400 400&quot;><rect width=&quot;400&quot; height=&quot;400&quot; fill=&quot;%23f0f0f0&quot;/><text x=&quot;200&quot; y=&quot;200&quot; text-anchor=&quot;middle&quot; dy=&quot;0.3em&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;%23666&quot;>Frame overlay coming soon</text></svg>'>
+            </div>
+            <p>Profile image with branded overlay (frame overlay coming soon)</p>
+        </div>
+
+        <div class="status">
+            <strong>Status:</strong> Profile image successfully extracted! Frame overlay feature is coming soon.
+        </div>
+
+        <div class="buttons">
+            <form action="/download" method="POST" style="display: inline;">
+                <input type="hidden" name="imageUrl" value="https://media.licdn.com/dms/image/v2/C5103AQHuKVGHtQFtgQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1586202988977?e=2147483647&v=beta&t=ns_YFRVa5L2Nq3wbPjnv8WjkxVLW8ZBN5okiC_6uJKs">
+                <input type="hidden" name="linkedinUrl" value="https://www.linkedin.com/in/lukas-hermann/">
+                <button type="submit" class="download-btn">📥 Download Image</button>
+            </form>
+            <button onclick="window.location.href='/'" type="button">🔄 Try Another Profile</button>
+        </div>
+    </div>
+</body>
+</html>

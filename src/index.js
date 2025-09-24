@@ -330,9 +330,9 @@ async function tryDirectImageUrlConstruction(username) {
 
     console.log('❌ No working patterns found, falling back to placeholder approach');
 
-    // As a last resort, we could return a constructed URL that might work
-    // This is speculative and may not always work
-    return `https://media.licdn.com/dms/image/v2/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/?e=2147483647&v=beta&t=${Date.now()}`;
+    // Don't return generic placeholder URLs - they always fail with 403
+    console.log('❌ No valid image URL patterns found');
+    return null;
 
   } catch (error) {
     console.error('❌ Error in direct image URL construction:', error);
@@ -559,6 +559,10 @@ function showImageResultPage(linkedinUrl, profileImageUrl) {
 
         <div class="status">
             <strong>Status:</strong> Profile image successfully extracted! Frame overlay feature is coming soon.
+            <br><br>
+            <strong>Debug Info:</strong><br>
+            <small>Original URL: <code style="word-break: break-all;">${profileImageUrl}</code></small><br>
+            <small>Proxy URL: <code style="word-break: break-all;">${proxiedImageUrl}</code></small>
         </div>
 
         <div class="buttons">
@@ -647,6 +651,25 @@ async function handleImageProxy(request) {
 
     if (!imageResponse.ok) {
       console.error('❌ Failed to fetch proxied image:', imageResponse.status);
+
+      // For 403 errors, return a helpful SVG placeholder instead of failing
+      if (imageResponse.status === 403) {
+        const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+          <rect width="200" height="200" fill="#f0f0f0"/>
+          <circle cx="100" cy="80" r="30" fill="#ccc"/>
+          <path d="M50 150 Q100 120 150 150 L150 200 L50 200 Z" fill="#ccc"/>
+          <text x="100" y="180" text-anchor="middle" font-family="Arial" font-size="12" fill="#666">LinkedIn blocked</text>
+        </svg>`;
+
+        return new Response(placeholderSvg, {
+          headers: {
+            'Content-Type': 'image/svg+xml',
+            'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
+            'Access-Control-Allow-Origin': '*',
+          }
+        });
+      }
+
       return new Response(`Could not fetch image: ${imageResponse.status}`, { status: imageResponse.status });
     }
 
