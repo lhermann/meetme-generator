@@ -4,3 +4,6 @@ compatibility_date = "2025-09-24"
 
 [env.production]
 name = "meetme-generator"
+
+[observability.logs]
+enabled = true
