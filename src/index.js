@@ -8,6 +8,8 @@ export default {
       return handleImageGeneration(request);
     } else if (url.pathname === '/download' && request.method === 'POST') {
       return handleImageDownload(request);
+    } else if (url.pathname === '/proxy-image') {
+      return handleImageProxy(request);
     }
 
     return new Response('Not Found', { status: 404 });
@@ -438,6 +440,8 @@ async function createOverlayWithFrame(profileImageBuffer) {
 }
 
 function showImageResultPage(linkedinUrl, profileImageUrl) {
+  // Create proxied image URL to bypass CORS issues
+  const proxiedImageUrl = `/proxy-image?url=${encodeURIComponent(profileImageUrl)}`;
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -538,7 +542,7 @@ function showImageResultPage(linkedinUrl, profileImageUrl) {
         <div class="profile-section">
             <h3>📸 Extracted Profile Image</h3>
             <div>
-                <img src="${profileImageUrl}" alt="LinkedIn Profile Image" class="profile-image"
+                <img src="${proxiedImageUrl}" alt="LinkedIn Profile Image" class="profile-image"
                      onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;200&quot; height=&quot;200&quot; viewBox=&quot;0 0 200 200&quot;><rect width=&quot;200&quot; height=&quot;200&quot; fill=&quot;%23f0f0f0&quot;/><text x=&quot;100&quot; y=&quot;100&quot; text-anchor=&quot;middle&quot; dy=&quot;0.3em&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;%23666&quot;>Image not accessible</text></svg>'">
             </div>
             <p>Original LinkedIn profile image</p>
@@ -547,7 +551,7 @@ function showImageResultPage(linkedinUrl, profileImageUrl) {
         <div class="generated-section">
             <h3>🎨 Generated MeetMe Image</h3>
             <div>
-                <img src="${profileImageUrl}" alt="Generated MeetMe Image" class="generated-image"
+                <img src="${proxiedImageUrl}" alt="Generated MeetMe Image" class="generated-image"
                      onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;400&quot; height=&quot;400&quot; viewBox=&quot;0 0 400 400&quot;><rect width=&quot;400&quot; height=&quot;400&quot; fill=&quot;%23f0f0f0&quot;/><text x=&quot;200&quot; y=&quot;200&quot; text-anchor=&quot;middle&quot; dy=&quot;0.3em&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;%23666&quot;>Frame overlay coming soon</text></svg>'>
             </div>
             <p>Profile image with branded overlay (frame overlay coming soon)</p>
@@ -616,6 +620,52 @@ async function handleImageDownload(request) {
   } catch (error) {
     console.error('❌ Error in handleImageDownload:', error);
     return new Response('Error downloading image: ' + error.message, {
+      status: 500
+    });
+  }
+}
+
+async function handleImageProxy(request) {
+  try {
+    const url = new URL(request.url);
+    const imageUrl = url.searchParams.get('url');
+
+    if (!imageUrl) {
+      return new Response('Image URL parameter is required', { status: 400 });
+    }
+
+    console.log('🖼️ Proxying image:', imageUrl);
+
+    // Fetch the image with proper headers
+    const imageResponse = await fetch(imageUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://www.linkedin.com/',
+        'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8'
+      }
+    });
+
+    if (!imageResponse.ok) {
+      console.error('❌ Failed to fetch proxied image:', imageResponse.status);
+      return new Response(`Could not fetch image: ${imageResponse.status}`, { status: imageResponse.status });
+    }
+
+    const imageBuffer = await imageResponse.arrayBuffer();
+    const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+
+    console.log('✅ Proxied image served, size:', imageBuffer.byteLength, 'bytes, type:', contentType);
+
+    return new Response(imageBuffer, {
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+        'Access-Control-Allow-Origin': '*', // Allow cross-origin requests
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error in handleImageProxy:', error);
+    return new Response('Error proxying image: ' + error.message, {
       status: 500
     });
   }
