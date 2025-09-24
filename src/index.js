@@ -142,12 +142,18 @@ async function handleImageGeneration(request) {
     </div>
 
     <div class="suggestions">
-        <h3>💡 Alternative Solutions:</h3>
+        <h3>💡 Alternative Solutions (2024 Recommendations):</h3>
         <ol>
+            <li><strong>Commercial APIs (Most Reliable):</strong>
+                <ul>
+                    <li><a href="https://www.scrapingdog.com/linkedin-scraper-api/">ScrapingDog LinkedIn API</a> - Handles anti-bot measures</li>
+                    <li><a href="https://www.piloterr.com/library/linkedin-profile">Piloterr LinkedIn API</a> - Returns structured data with profile images</li>
+                    <li><a href="https://apify.com/curious_coder/linkedin-profile-scraper">Apify LinkedIn Scraper</a> - Open source alternative</li>
+                </ul>
+            </li>
             <li><strong>Manual Download:</strong> Visit the LinkedIn profile manually and save the profile image</li>
-            <li><strong>Browser Extension:</strong> Use a browser extension to extract profile images</li>
-            <li><strong>LinkedIn API:</strong> Use LinkedIn's official API with proper authentication</li>
-            <li><strong>Third-party Services:</strong> Consider services like Scrapingdog or Apify</li>
+            <li><strong>LinkedIn Official API:</strong> Use OAuth 2.0 authentication (requires LinkedIn Partnership)</li>
+            <li><strong>Browser Extension:</strong> Create a simple browser extension to extract images</li>
         </ol>
 
         <h3>🔧 For Developers:</h3>
@@ -254,28 +260,39 @@ async function extractLinkedInProfileImage(linkedinUrl) {
     const html = await response.text();
     console.log('📄 HTML length:', html.length, 'characters');
 
-    // Extract profile image URL from the HTML
-    const imageMatch = html.match(/"https:\/\/media\.licdn\.com\/dms\/image\/[^"]+"/);
-    if (imageMatch) {
-      let imageUrl = imageMatch[0].replace(/"/g, '');
+    // Method 1: Extract from og:image meta tag (most reliable for sharing)
+    const ogImageMatch = html.match(/<meta property="og:image" content="([^"]+)"/i);
+    if (ogImageMatch) {
+      let imageUrl = ogImageMatch[1];
       // Clean up HTML entities in the URL
       imageUrl = imageUrl.replace(/&amp;/g, '&');
-      console.log('✅ Found profile image URL (method 1):', imageUrl);
+      console.log('✅ Found profile image URL (og:image method):', imageUrl);
       return imageUrl;
     }
 
-    // Fallback: look for other image patterns
-    const altImageMatch = html.match(/https:\/\/media\.licdn\.com\/dms\/image\/[^"'\s>]+/);
-    if (altImageMatch) {
-      console.log('✅ Found profile image URL (method 2):', altImageMatch[0]);
-      return altImageMatch[0];
+    // Method 2: Look for alternative og:image format
+    const altOgMatch = html.match(/<meta property='og:image' content='([^']+)'/i);
+    if (altOgMatch) {
+      let imageUrl = altOgMatch[1];
+      imageUrl = imageUrl.replace(/&amp;/g, '&');
+      console.log('✅ Found profile image URL (alt og:image method):', imageUrl);
+      return imageUrl;
     }
 
-    // Try another pattern for profile images
-    const ogImageMatch = html.match(/<meta property="og:image" content="([^"]+)"/);
-    if (ogImageMatch) {
-      console.log('✅ Found profile image URL (og:image):', ogImageMatch[1]);
-      return ogImageMatch[1];
+    // Method 3: Extract from profile image elements
+    const profileImageMatch = html.match(/"https:\/\/media\.licdn\.com\/dms\/image\/[^"]+"/);
+    if (profileImageMatch) {
+      let imageUrl = profileImageMatch[0].replace(/"/g, '');
+      imageUrl = imageUrl.replace(/&amp;/g, '&');
+      console.log('✅ Found profile image URL (profile element method):', imageUrl);
+      return imageUrl;
+    }
+
+    // Method 4: Look for any LinkedIn media image URLs
+    const mediaImageMatch = html.match(/https:\/\/media\.licdn\.com\/dms\/image\/[^"'\s>]+/);
+    if (mediaImageMatch) {
+      console.log('✅ Found profile image URL (media pattern method):', mediaImageMatch[0]);
+      return mediaImageMatch[0];
     }
 
     console.log('❌ No profile image found in HTML');
