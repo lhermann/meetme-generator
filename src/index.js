@@ -6,6 +6,8 @@ export default {
       return handleHomePage();
     } else if (url.pathname === '/generate' && request.method === 'POST') {
       return handleImageGeneration(request);
+    } else if (url.pathname === '/download' && request.method === 'POST') {
+      return handleImageDownload(request);
     }
 
     return new Response('Not Found', { status: 404 });
@@ -174,30 +176,8 @@ async function handleImageGeneration(request) {
       });
     }
 
-    // For now, just return the profile image since OffscreenCanvas isn't available in Workers
-    console.log('📥 Fetching profile image for direct return...');
-    const profileResponse = await fetch(profileImageUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Referer': 'https://www.linkedin.com/',
-        'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8'
-      }
-    });
-
-    if (!profileResponse.ok) {
-      return new Response(`Could not fetch profile image: ${profileResponse.status}`, { status: 400 });
-    }
-
-    const imageBuffer = await profileResponse.arrayBuffer();
-    console.log('✅ Profile image retrieved, size:', imageBuffer.byteLength, 'bytes');
-
-    return new Response(imageBuffer, {
-      headers: {
-        'Content-Type': 'image/jpeg',
-        'Content-Disposition': 'attachment; filename="linkedin-profile.jpg"',
-        'Cache-Control': 'no-cache'
-      }
-    });
+    // Show the extracted image on the page instead of downloading
+    return showImageResultPage(linkedinUrl, profileImageUrl);
   } catch (error) {
     return new Response('Error processing request: ' + error.message, {
       status: 500
@@ -332,8 +312,17 @@ async function tryDirectImageUrlConstruction(username) {
       });
 
       if (testResponse.ok && testResponse.headers.get('content-type')?.startsWith('image/')) {
-        console.log('✅ Found working image pattern:', pattern);
-        return pattern;
+        const contentLength = testResponse.headers.get('content-length');
+        const imageSize = contentLength ? parseInt(contentLength) : 0;
+        console.log('🧪 Pattern response size:', imageSize, 'bytes');
+
+        // Skip tiny images (likely placeholders)
+        if (imageSize > 1000) {
+          console.log('✅ Found working image pattern:', pattern);
+          return pattern;
+        } else {
+          console.log('⚠️ Image too small, likely placeholder. Skipping...');
+        }
       }
     }
 
@@ -445,5 +434,189 @@ async function createOverlayWithFrame(profileImageBuffer) {
   } catch (error) {
     console.error('❌ Error creating overlay with frame:', error);
     throw error;
+  }
+}
+
+function showImageResultPage(linkedinUrl, profileImageUrl) {
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Image Extracted - MeetMe Generator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #0077b5;
+            margin-bottom: 30px;
+        }
+        .profile-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .profile-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 50%;
+            border: 4px solid #0077b5;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            margin: 20px 0;
+        }
+        .generated-section {
+            background: #e8f5e8;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .generated-image {
+            max-width: 400px;
+            border-radius: 10px;
+            border: 2px solid #28a745;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            margin: 20px 0;
+        }
+        .buttons {
+            margin: 30px 0;
+        }
+        button {
+            background-color: #0077b5;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #005885;
+        }
+        .download-btn {
+            background-color: #28a745;
+        }
+        .download-btn:hover {
+            background-color: #218838;
+        }
+        .linkedin-url {
+            color: #666;
+            font-size: 14px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        .status {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Profile Image Extracted!</h1>
+
+        <div class="linkedin-url">From: ${linkedinUrl}</div>
+
+        <div class="profile-section">
+            <h3>📸 Extracted Profile Image</h3>
+            <div>
+                <img src="${profileImageUrl}" alt="LinkedIn Profile Image" class="profile-image"
+                     onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;200&quot; height=&quot;200&quot; viewBox=&quot;0 0 200 200&quot;><rect width=&quot;200&quot; height=&quot;200&quot; fill=&quot;%23f0f0f0&quot;/><text x=&quot;100&quot; y=&quot;100&quot; text-anchor=&quot;middle&quot; dy=&quot;0.3em&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;%23666&quot;>Image not accessible</text></svg>'">
+            </div>
+            <p>Original LinkedIn profile image</p>
+        </div>
+
+        <div class="generated-section">
+            <h3>🎨 Generated MeetMe Image</h3>
+            <div>
+                <img src="${profileImageUrl}" alt="Generated MeetMe Image" class="generated-image"
+                     onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;400&quot; height=&quot;400&quot; viewBox=&quot;0 0 400 400&quot;><rect width=&quot;400&quot; height=&quot;400&quot; fill=&quot;%23f0f0f0&quot;/><text x=&quot;200&quot; y=&quot;200&quot; text-anchor=&quot;middle&quot; dy=&quot;0.3em&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;%23666&quot;>Frame overlay coming soon</text></svg>'>
+            </div>
+            <p>Profile image with branded overlay (frame overlay coming soon)</p>
+        </div>
+
+        <div class="status">
+            <strong>Status:</strong> Profile image successfully extracted! Frame overlay feature is coming soon.
+        </div>
+
+        <div class="buttons">
+            <form action="/download" method="POST" style="display: inline;">
+                <input type="hidden" name="imageUrl" value="${profileImageUrl}">
+                <input type="hidden" name="linkedinUrl" value="${linkedinUrl}">
+                <button type="submit" class="download-btn">📥 Download Image</button>
+            </form>
+            <button onclick="window.location.href='/'" type="button">🔄 Try Another Profile</button>
+        </div>
+    </div>
+</body>
+</html>`;
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html' }
+  });
+}
+
+async function handleImageDownload(request) {
+  try {
+    const formData = await request.formData();
+    const imageUrl = formData.get('imageUrl');
+    const linkedinUrl = formData.get('linkedinUrl');
+
+    if (!imageUrl) {
+      return new Response('Image URL is required', { status: 400 });
+    }
+
+    console.log('📥 Downloading image for user:', imageUrl);
+
+    // Fetch the image
+    const imageResponse = await fetch(imageUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://www.linkedin.com/',
+        'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8'
+      }
+    });
+
+    if (!imageResponse.ok) {
+      return new Response(`Could not fetch image: ${imageResponse.status}`, { status: 400 });
+    }
+
+    const imageBuffer = await imageResponse.arrayBuffer();
+    console.log('✅ Image ready for download, size:', imageBuffer.byteLength, 'bytes');
+
+    // Extract filename from LinkedIn URL
+    const usernameMatch = linkedinUrl.match(/linkedin\.com\/in\/([^\/\?]+)/);
+    const username = usernameMatch ? usernameMatch[1] : 'linkedin-profile';
+
+    return new Response(imageBuffer, {
+      headers: {
+        'Content-Type': 'image/jpeg',
+        'Content-Disposition': `attachment; filename="${username}-profile.jpg"`,
+        'Cache-Control': 'no-cache'
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error in handleImageDownload:', error);
+    return new Response('Error downloading image: ' + error.message, {
+      status: 500
+    });
   }
 }
