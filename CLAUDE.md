@@ -18,11 +18,7 @@ npm run deploy
 # Install dependencies
 npm install
 
-# Run linting (when available)
-npm run lint
-
-# Run type checking (when available)
-npm run typecheck
+# No lint/typecheck commands available (pure JavaScript project)
 ```
 
 ## Build System
@@ -36,55 +32,57 @@ npm run typecheck
 
 ```
 src/
-├── index.js              # Main worker entry point
+├── index.js              # Main worker entry point (695 lines)
 assets/
 ├── frame-01.png          # Frame overlay asset
 wrangler.toml             # Cloudflare Worker configuration
 package.json              # Dependencies and scripts
+README.md                 # Project documentation
 ```
 
 ## Key Features
 
 - ✅ LinkedIn profile image extraction via web scraping
-- ✅ HTML form interface
-- ✅ Comprehensive logging for debugging
-- ✅ Error handling for various edge cases
-- 🚧 Frame overlay generation (OffscreenCanvas limitation)
+- ✅ HTML form interface with styled UI
+- ✅ Visual result page showing extracted images
+- ✅ Image proxy endpoint to handle CORS issues
+- ✅ Download functionality for profile images
+- ✅ Comprehensive error handling and user feedback
+- ✅ Fallback handling for LinkedIn 999/403 errors
+- ✅ Multiple extraction methods (og:image, profile elements, media patterns)
+- 🚧 Frame overlay generation (OffscreenCanvas not available in Workers)
 
-## Technical Constraints
+## Technical Implementation
 
-### Cloudflare Workers Limitations
+### Current Routes
+- `GET /` - HTML form interface
+- `POST /generate` - Extract LinkedIn profile image and show result page
+- `POST /download` - Download extracted image
+- `GET /proxy-image` - Proxy images to bypass CORS restrictions
 
-1. **No OffscreenCanvas**: Browser APIs like Canvas aren't available
-2. **Image Processing**: Limited to basic fetch/response operations
-3. **File System**: No direct file system access (assets must be embedded)
+### LinkedIn Extraction Methods
+1. **og:image meta tag** (primary method)
+2. **Alternative og:image formats**
+3. **Profile image elements**
+4. **Media pattern matching**
+5. **Fallback placeholder for blocked requests**
 
-### LinkedIn Anti-Scraping
-
-- Profile images require proper User-Agent and Referer headers
-- Some profiles may return 403 for direct image access
-- HTML entity decoding required (`&amp;` → `&`)
-
-## Testing
-
-```bash
-# Test LinkedIn profile extraction
-curl -X POST http://localhost:8787/generate \
-  -d "linkedinUrl=https://www.linkedin.com/in/username/" \
-  --header "Content-Type: application/x-www-form-urlencoded" \
-  -o profile-image.jpg
-```
+### Anti-Scraping Measures
+- Comprehensive browser headers (User-Agent, Referer, Accept, etc.)
+- HTML entity decoding (`&amp;` → `&`)
+- 403/999 error handling with helpful user guidance
+- Image proxy to bypass CORS issues
 
 ## Development Notes
 
-- LinkedIn profile extraction works reliably for public profiles
-- Image overlay requires alternative approach (external service or pre-processing)
-- Comprehensive logging enabled for debugging (`wrangler.toml`)
-- Regex patterns handle multiple LinkedIn URL formats
+- All functionality working except frame overlay (requires external service)
+- Robust error handling with detailed user feedback pages
+- Image proxy prevents CORS issues when displaying LinkedIn images
+- Comprehensive logging for debugging
+- SVG placeholder fallback for inaccessible images
 
-## Next Steps
+## Known Limitations
 
-1. **Frame Integration**: Embed frame-01.png as base64 or use external processing
-2. **Image Composition**: Consider Cloudflare Images API for overlays
-3. **Error Handling**: Add more robust error handling for edge cases
-4. **Rate Limiting**: Implement rate limiting for production use
+- **No OffscreenCanvas**: Image composition requires external service
+- **LinkedIn Anti-Bot**: Some profiles may return 999/403 status codes
+- **File System**: No direct asset access (frame must be embedded as base64)
